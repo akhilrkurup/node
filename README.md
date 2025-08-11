@@ -40,9 +40,9 @@ We give instructions and scripts to implement our CLF-CBF-NODE approach on the F
 
 ### Installation
 
-* Install [libfranka](https://github.com/frankaemika/libfranka) by following instructions from [here](https://frankaemika.github.io/docs/installation_linux.html#building-from-source). Install libfranka outside your catkin workspace (e.g. ``catkin_ws``). We recommend to build from source. 
+* Install [libfranka](https://github.com/frankaemika/libfranka) by following instructions from [here](https://frankarobotics.github.io/docs/installation_linux.html#building-from-source). Install libfranka outside your catkin workspace (e.g. ``catkin_ws``). We recommend to build from source. 
 
-* Install [franka_ros](https://github.com/frankaemika/franka_ros), by following instructions form [here](https://frankaemika.github.io/docs/installation_linux.html#building-the-ros-packages).
+* Install [franka_ros](https://github.com/frankaemika/franka_ros), by following instructions form [here](https://frankarobotics.github.io/docs/franka_ros.html).
 
 * Setup and verify [realtime kernel](https://github.com/penn-figueroa-lab/lab_wiki/wiki/Real-Time-Kernel-Patch-in-Ubuntu) in your PC, by following instructions from [here](https://github.com/penn-figueroa-lab/lab_wiki/wiki/Franka#pc-setup). This is not necessary for gazebo simulation.
 
