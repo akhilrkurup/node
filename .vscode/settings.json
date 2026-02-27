@@ -1,3 +1,5 @@
 {
-    "cmake.sourceDirectory": "/home/farhad_nawaz/My_Data/Research/ICRA 2024 reviews/Github/CLF-CBF-NODE/franka_interactive_controllers"
+    "cmake.sourceDirectory": "/home/farhad_nawaz/My_Data/Research/ICRA 2024 reviews/Github/CLF-CBF-NODE/franka_interactive_controllers",
+    "python-envs.defaultEnvManager": "ms-python.python:conda",
+    "python-envs.defaultPackageManager": "ms-python.python:conda"
 }
