@@ -229,7 +229,7 @@ def train_bc_model(xs, dxs, dt, steps=50000, lr=1e-4):
 # ==========================================
 if __name__ == "__main__":
 
-    trajectory_files = [f"./wiping_data/wprr_demo{i}.npy" for i in range(1, 6)]
+    trajectory_files = [f"./all_data/node_data/demo_{i}.npy" for i in range(2, 6)]
 
     print("Loading data and extracting empirical velocities...")
     xs, dxs, dt = load_and_preprocess_bc_data(trajectory_files)

@@ -47,7 +47,7 @@ if __name__ == "__main__":
     DATA_DIM = 3  # Change to 2 if testing the 2D drawing data
     WIDTH = 64
     DEPTH = 3
-    MODEL_PATH = "./wiping_data/trained_node_policy.pth"
+    MODEL_PATH = "./wiping_data/trained_node_policy_new.pth"
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = NeuralODE(DATA_DIM, WIDTH, DEPTH).to(device)
@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     # Define initial starting condition (Must be in your normalized range)
     # Shape must be [batch_size, data_size], e.g., [1, 3]
-    start_pos = torch.tensor([[0.2, 0, 0.0]], dtype=torch.float32).to(device)
+    start_pos = torch.tensor([[0.65, 0, 0.0]], dtype=torch.float32).to(device)
 
     # Define the integration time horizon
     # t=0 to t=1 corresponds exactly to one demonstrated loop based on your scaler

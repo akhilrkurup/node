@@ -104,7 +104,9 @@ if __name__ == "__main__":
     DATA_DIM = 3  # Set to 2 if training was 2D
     WIDTH = 64
     DEPTH = 3
-    MODEL_PATH = r"C:\Users\akhil\OneDrive\Documents\GitHub\CLF-CBF-NODE\wiping_data\bc_polic_iter3300.pth"
+    MODEL_PATH = (
+        r"/home/akhil-hiro/Documents/GitHub/node/wiping_data/bc_polic_iter6100.pth"
+    )
 
     # Initialize and Load Model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -122,12 +124,15 @@ if __name__ == "__main__":
 
     # Define a starting point (Normalized range -0.5 to 0.5)
     # Example: Starting at the 'top' of the wiping motion
-    start_pos = [0.2, 0, 0.0]
+    start_pos = [0.65, 0, 0.0]
 
     # Run Simulation
     print("Simulating rollout...")
-    generated_traj = simulate_trajectory(model, start_pos, n_steps=140)
-    np.save("./wiping_data/bc_rollout.npy", generated_traj)
+    generated_traj = simulate_trajectory(model, start_pos, n_steps=105, dt=0.01)
+    np.save(
+        "./wiping_data/bc_rollout_bad.npy",
+        generated_traj,
+    )
     # Visualization
     fig = plt.figure(figsize=(10, 7))
     if DATA_DIM == 3:
