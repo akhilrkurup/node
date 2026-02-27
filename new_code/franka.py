@@ -1,19 +1,30 @@
 import numpy as np
-import math
+import time
 from scipy.spatial.transform import Rotation
 from franky import (
     Robot,
     Affine,
-    Twist,
     CartesianState,
     CartesianWaypoint,
     CartesianWaypointMotion,
-    RelativeDynamicsFactor,
+    CartesianMotion,
 )
 
 
-def execute_trajectory_on_franka(npy_path, robot_ip, dt=0.01):
-    # 1. Load the trajectory (N, 3)
+def execute_trajectory_on_franka(npy_path, robot_ip):
+    # 1. Initialize Hardware & Clear Errors
+    print(f"Connecting to Franka at {robot_ip}...")
+    robot = Robot(robot_ip)
+    robot.recover_from_errors()
+
+    # Set conservative dynamics
+    robot.relative_dynamics_factor = 0.01
+
+    initial_quat = robot.current_cartesian_state.pose.end_effector_pose.quaternion
+    initial_z = robot.current_cartesian_state.pose.end_effector_pose.translation[2]
+    print("Captured initial end-effector orientation.")
+
+    # 3. Load the trajectory (N, 3)
     traj = np.load(npy_path)
     if len(traj.shape) != 2 or traj.shape[1] != 3:
         raise ValueError(f"Expected trajectory of shape (N, 3), got {traj.shape}")
@@ -21,54 +32,40 @@ def execute_trajectory_on_franka(npy_path, robot_ip, dt=0.01):
     n_points = traj.shape[0]
     print(f"Loaded trajectory with {n_points} waypoints.")
 
-    # 2. Safety Offset (CRITICAL)
-    # The trajectory from the Neural Network might be centered around the origin (0,0,0).
-    # On the Franka, (0,0,0) is physically inside the base of the robot.
-    # You MUST shift the trajectory to a safe workspace in front of the robot.
-    # Adjust these values based on your physical table height and reach!
-    workspace_offset = np.array([0.4, 0.0, 0.2])  # 40cm forward, 20cm above base
+    # 4. Modify Trajectory Geometry
+    # Rewrite the Z component to be exactly 0.1 meters for all points
+    traj[:, 2] = initial_z
+
+    # Apply safety offset (Currently [0,0,0] but kept for future use)
+    workspace_offset = np.array([0, 0.0, 0.0])
     safe_traj = traj + workspace_offset
 
-    # 3. Compute target velocities to prevent stuttering
-    # Ruckig needs to know the velocity at each waypoint to maintain continuous flow
-    velocities = np.gradient(safe_traj, axis=0) / dt
+    # 5. Move to the Start Point
+    start_pos = safe_traj[0].tolist()
+    start_pose = Affine(start_pos, initial_quat)
 
-    # 4. Define End-Effector Orientation
-    # We assign a fixed orientation for the rollout (e.g., pointing straight down).
-    # Franka's end-effector pointing down is roughly a 180-degree rotation around X or Y.
-    quat = Rotation.from_euler("xyz", [math.pi, 0, 0]).as_quat()
+    print(f"\nMoving to start position: {start_pos}")
+    start_motion = CartesianMotion(start_pose)
+    robot.move(start_motion)
 
-    # 5. Build the continuous waypoint list
+    # 6. Wait for human confirmation
+    input(
+        "\n✅ Reached start point. Press [ENTER] to execute the rest of the trajectory..."
+    )
+
+    # 7. Build the Waypoint List (Without explicit velocities)
     waypoints = []
-    for i in range(n_points):
-        # Extract position and linear velocity for this step
+    # Start loop from index 1 since we are already at index 0
+    for i in range(1, n_points):
         pos = safe_traj[i].tolist()
-        lin_vel = velocities[i].tolist()
 
-        # Zero angular velocity since we want to maintain the fixed downward orientation
-        ang_vel = [0.0, 0.0, 0.0]
-
-        # For the very last waypoint, we must force the velocity to exactly 0
-        # so the robot comes to a complete, safe stop at the end of the motion.
-        if i == n_points - 1:
-            lin_vel = [0.0, 0.0, 0.0]
-
-        # Construct the state and waypoint
-        state = CartesianState(pose=Affine(pos, quat), velocity=Twist(lin_vel, ang_vel))
+        # State contains only position and orientation, no twist/velocity
+        state = CartesianState(pose=Affine(pos, initial_quat))
         waypoints.append(CartesianWaypoint(state))
 
-    # 6. Initialize Hardware & Execute
-    print(f"Connecting to Franka at {robot_ip}...")
-    robot = Robot(robot_ip)
 
-    # Clear any prior errors
-    robot.recover_from_errors()
-
-    # Set conservative dynamics for the first real-world test
-    # This limits the robot to 10% of its maximum velocity, acceleration, and jerk
-    robot.relative_dynamics_factor = 0.1
-
-    print("Executing motion... Keep your hand on the emergency stop.")
+    # 8. Execute the remaining trajectory
+    print("Executing waypoint motion... Keep your hand on the emergency stop.")
     motion = CartesianWaypointMotion(waypoints)
     robot.move(motion)
 
@@ -77,8 +74,7 @@ def execute_trajectory_on_franka(npy_path, robot_ip, dt=0.01):
 
 if __name__ == "__main__":
     # Replace with your actual paths and IP
-    NPY_FILE = "generated_rollout.npy"
-    FRANKA_IP = "10.90.90.1"
+    NPY_FILE = "/home/akhil-hiro/Documents/GitHub/node/wiping_data/bc_rollout_bad.npy"
+    FRANKA_IP = "192.168.1.11"
 
-    # dt should match the time delta used during your NODE/BC simulation rollout
-    execute_trajectory_on_franka(NPY_FILE, FRANKA_IP, dt=0.005)
+    execute_trajectory_on_franka(NPY_FILE, FRANKA_IP)
