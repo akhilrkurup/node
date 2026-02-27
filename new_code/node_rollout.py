@@ -78,12 +78,7 @@ if __name__ == "__main__":
 
     # Extract the first (and only) batch, convert to numpy
     generated_traj = generated_tensor[0].cpu().numpy()
-    scaler_path = "./wiping_data/workspace_scaler.pkl"
 
-    # Load the saved scaler
-    with open(scaler_path, "rb") as f:
-        loaded_scaler = pickle.load(f)
-    generated_traj = loaded_scaler.inverse_transform(generated_traj)
     np.save("./wiping_data/node_rollout.npy", generated_traj)
 
     # ==========================================
