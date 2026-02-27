@@ -8,39 +8,27 @@ from scipy import interpolate
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 import os
+import pickle
 
 
-# ==========================================
-# 1. Data Parsing & Preprocessing
-# ==========================================
 def load_and_preprocess_data(file_names, nsamples=300):
     """
-    Parses the 'New trajectory' text file format from a list of files,
-    normalizes the spatial coordinates to [-0.5, 0.5], and interpolates
-    the sequences to a uniform length.
+    Parses trajectories from .npy files and interpolates them to a uniform
+    length using raw spatial coordinates (no scaling applied).
     """
     traj_all = []
 
     for file_name in file_names:
         # Load the numpy file
         traj = np.load(file_name)
-
-        traj_all.append(traj)
+        if len(traj.shape) == 2:
+            traj_all.append(traj)
+        else:
+            print(f"Warning: Skipping {file_name} due to shape {traj.shape}")
 
     total_trajs = len(traj_all)
     if total_trajs == 0:
-        raise ValueError("No trajectories parsed. Verify file paths and formatting.")
-
-    # Normalize state space and extract chronological time steps
-    traj_all_norm = []
-    ts_norm = []
-    scaler = MinMaxScaler(feature_range=(-0.5, 0.5))
-
-    for i in range(total_trajs):
-        scaler.fit(traj_all[i])
-        ysti = scaler.transform(traj_all[i])
-        traj_all_norm.append(ysti)
-        ts_norm.append(np.linspace(0, 1, num=ysti.shape[0]))
+        raise ValueError("No trajectories parsed. Verify file paths.")
 
     dim = traj_all[0].shape[1]
 
@@ -48,17 +36,21 @@ def load_and_preprocess_data(file_names, nsamples=300):
     traj_all_process = np.zeros((total_trajs, nsamples, dim))
     ts_new = np.linspace(0, 1, nsamples)
 
-    # 1D interpolation over normalized states to uniformize the sequence length
+    # 1D interpolation over raw states to uniformize the sequence length
     for i in range(total_trajs):
+        # Create a time vector based on the original point count for this trajectory
+        ts_original = np.linspace(0, 1, num=traj_all[i].shape[0])
+
         for j in range(dim):
-            f_interp = interpolate.interp1d(ts_norm[i], traj_all_norm[i][:, j])
-            traj_new = f_interp(ts_new)
-            traj_all_process[i, :, j] = traj_new
+            # Interpolating raw data directly
+            f_interp = interpolate.interp1d(ts_original, traj_all[i][:, j])
+            traj_all_process[i, :, j] = f_interp(ts_new)
 
     # Convert to PyTorch tensors
     ts_tensor = torch.tensor(ts_new, dtype=torch.float32)
     ys_tensor = torch.tensor(traj_all_process, dtype=torch.float32)
 
+    print(f"Successfully processed {total_trajs} raw trajectories.")
     return ts_tensor, ys_tensor
 
 
