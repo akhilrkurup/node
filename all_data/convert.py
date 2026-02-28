@@ -37,11 +37,11 @@ def convert_json_to_npy(json_files):
 if __name__ == "__main__":
     # Add your list of files here
     files_to_convert = [
-        "/home/akhil-hiro/Documents/GitHub/node/all_data/node_data/demo_1.json",
-        "/home/akhil-hiro/Documents/GitHub/node/all_data/node_data/demo_2.json",
-        "/home/akhil-hiro/Documents/GitHub/node/all_data/node_data/demo_3.json",
-        "/home/akhil-hiro/Documents/GitHub/node/all_data/node_data/demo_4.json",
-        "/home/akhil-hiro/Documents/GitHub/node/all_data/node_data/demo_5.json",
+        "./all_data/stirring_data/demo_new_1.json",
+        "./all_data/stirring_data/demo_new_2.json",
+        "./all_data/stirring_data/demo_new_3.json",
+        "./all_data/stirring_data/demo_new_4.json",
+        "./all_data/stirring_data/demo_new_5.json",
     ]
 
     convert_json_to_npy(files_to_convert)
