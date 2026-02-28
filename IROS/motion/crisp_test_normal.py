@@ -8,29 +8,6 @@ import socket
 import json
 import time
 
-TCP_HOST = "127.0.0.1"
-TCP_PORT = 5000
-
-
-class SocketGripperClient:
-    def __init__(self, host=TCP_HOST, port=TCP_PORT):
-        self.host, self.port = host, port
-
-    def _send(self, command):
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(0.5)
-                s.connect((self.host, self.port))
-                s.sendall((json.dumps({"command": command}) + "\n").encode("utf-8"))
-        except Exception as e:
-            print(f"      [Socket Error] Gripper command failed: {e}")
-
-    def open(self):
-        self._send("open")
-
-    def close(self):
-        self._send("close")
-
 
 # ==========================================
 # MONKEY PATCH FOR CRISP_PY BUG
@@ -67,30 +44,23 @@ def _patched_to_ros_msg(self, *args, **kwargs):
 Pose.to_ros_msg = _patched_to_ros_msg
 # ==========================================
 
-client = SocketGripperClient()
 robot = Robot()
 robot.wait_until_ready()
-traj = np.load("IROS/stirring/raw/node_rollouts_51.npy")[0]
+traj = np.load("IROS/wiping/processed/node_rollouts_51.npy")[0]
 robot.controller_switcher_client.switch_controller("cartesian_impedance_controller")
 
 current_pose = robot.end_effector_pose.copy()
 rate = robot.node.create_rate(5)
 start_pose = robot.end_effector_pose.copy()
-traj[:, 0] = start_pose.position[0]
+traj[:, 2] = start_pose.position[2]
 # Pass pure numpy arrays here (removed .tolist())
 first_position = traj[0]
 first_orientation = start_pose.orientation
 first_pose = Pose(position=first_position, orientation=first_orientation)
-client.open()
-time.sleep(4)
 robot.move_to(position=None, pose=first_pose)
-client.close()
-time.sleep(4)
 t = 0
 for i in range(len(traj)):
-    if i == 88:
-        client.open()
-        time.sleep(4)
+
     print(i)
     waypoint = traj[i]
     desired_pose = Pose(

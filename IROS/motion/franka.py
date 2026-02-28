@@ -18,14 +18,14 @@ def execute_trajectory_on_franka(npy_path, robot_ip):
     robot.recover_from_errors()
 
     # Set conservative dynamics
-    robot.relative_dynamics_factor = 0.01
+    robot.relative_dynamics_factor = 0.05
 
     initial_quat = robot.current_cartesian_state.pose.end_effector_pose.quaternion
     initial_z = robot.current_cartesian_state.pose.end_effector_pose.translation[2]
     print("Captured initial end-effector orientation.")
 
     # 3. Load the trajectory (N, 3)
-    traj = np.load(npy_path)
+    traj = np.load(npy_path)[0]
     if len(traj.shape) != 2 or traj.shape[1] != 3:
         raise ValueError(f"Expected trajectory of shape (N, 3), got {traj.shape}")
 
@@ -63,7 +63,6 @@ def execute_trajectory_on_franka(npy_path, robot_ip):
         state = CartesianState(pose=Affine(pos, initial_quat))
         waypoints.append(CartesianWaypoint(state))
 
-
     # 8. Execute the remaining trajectory
     print("Executing waypoint motion... Keep your hand on the emergency stop.")
     motion = CartesianWaypointMotion(waypoints)
@@ -74,7 +73,7 @@ def execute_trajectory_on_franka(npy_path, robot_ip):
 
 if __name__ == "__main__":
     # Replace with your actual paths and IP
-    NPY_FILE = "/home/akhil-hiro/Documents/GitHub/node/wiping_data/bc_rollout_bad.npy"
+    NPY_FILE = "IROS/stirring/raw/node_rollouts_51.npy"
     FRANKA_IP = "192.168.1.11"
 
     execute_trajectory_on_franka(NPY_FILE, FRANKA_IP)
